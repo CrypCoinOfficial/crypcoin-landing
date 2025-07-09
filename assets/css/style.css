@@ -393,14 +393,9 @@ button:focus {
     margin: 10px 0 50px 0;
 }
 
-.hb-elem {
-    max-height: 660px;
-    width: 100%;
-}
 
-.hb-elem img {
-    height: 100%;
-}
+
+
 
 .hb-position {
     max-height: 500px;
@@ -1639,11 +1634,7 @@ max-width: 290px;
 }
 
 /* Corrección de alineación de CryptoCoin */
-.hb-elem.text-end {
-    display: flex;
-    justify-content: flex-end;
-    align-items: flex-end;
-}
+
 
 .hb-responsive-elem {
     width: 100%;
@@ -1652,14 +1643,7 @@ max-width: 290px;
 }
 
 
-.hb-elem-2 img {
-    max-width: 200px;
-    position: relative;
-    top: 40px; /* Ajustable */
-    z-index: 3;
-    display: block;
-    margin: 0 auto;
-}
+
 
 /* Ajustes para el VS */
 .vs-center {
@@ -2002,72 +1986,49 @@ h2, h3, h4, h5, .section-title, .sub-title {
 
 
 /* 🔥 Ajuste CrypCoin Video FINAL */
-.hb-elem video.hb-responsive-elem {
-  width: 100%;
-  height: 100%;
-  max-width: none;
-  max-height: 660px;
-  object-fit: contain;
-  display: block;
-  transform: translateY(60px);
-}
+
 
 @media (max-width: 991px) {
-  .hb-elem video.hb-responsive-elem {
-    max-height: 400px;
-    transform: translateY(40px);
-  }
+  
 }
 
 /* ✅ Ajuste CrypCoin Video FINAL FORZADO */
-.hb-elem video.hb-responsive-elem {
-  width: 100%;
-  height: 100%;
-  max-width: none;
-  max-height: 660px;
-  object-fit: contain;
-  display: block;
-  transform: translateY(60px);
-}
+
 
 @media (max-width: 991px) {
-  .hb-elem video.hb-responsive-elem {
-    max-height: 400px;
-    transform: translateY(40px);
-  }
+  
 }
 
 
 /* === 🔥 AJUSTE FINAL CrypCoin Video Escalado === */
-.hb-elem {
-  min-height: 400px;
-  display: flex;
-  justify-content: flex-end;
-  align-items: flex-end;
-}
 
-.hb-elem video.hb-responsive-elem {
-  width: auto;
-  height: 100%;
-  max-height: 660px;
-  object-fit: contain;
-  display: block;
-  transform: translateY(0);
-}
+
+
 
 @media (max-width: 991px) {
-  .hb-elem video.hb-responsive-elem {
-    max-height: 400px;
-  }
+  
 }
 
 
 
 /* === AJUSTE FINAL CRYPCOIN VIDEO CON POSITION ABSOLUTE === */
+
+
+
+
+@media (max-width: 991px) {
+  
+  
+}
+
+/* === AJUSTE FINAL CrypCoin Video === */
 .hb-elem {
   position: relative;
   width: 100%;
   min-height: 400px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-end;
 }
 
 .hb-elem video.hb-responsive-elem {
