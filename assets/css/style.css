@@ -1193,9 +1193,17 @@ max-width: 290px;
         max-width: 180px;
     }
 
-    .hb-responsive-elem {
-        width: 100%;
-    }
+    
+.hb-responsive-elem {
+  position: absolute;
+  right: 5%;
+  bottom: 0;
+  width: 100%;
+  max-width: 400px;
+  transform: none;
+  z-index: 3;
+}
+
 
     .hero-content-wrapper h1 {
         font-size: 62px;
@@ -1640,16 +1648,23 @@ max-width: 290px;
 
 /* Corrección de alineación de CryptoCoin */
 .hb-elem.text-end {
-    display: flex;
-    justify-content: flex-end;
-    align-items: flex-end;
+  position: relative;
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-end;
 }
 
+
 .hb-responsive-elem {
-    width: 100%;
-    max-width: 400px;
-    transform: translateY(60px); /* Ajuste visual para pisar suelo */
+  position: absolute;
+  right: 5%;
+  bottom: 0;
+  width: 100%;
+  max-width: 400px;
+  transform: none;
+  z-index: 3;
 }
+
 
 
 .hb-elem-2 img {
@@ -1997,66 +2012,4 @@ h2, h3, h4, h5, .section-title, .sub-title {
   color: #FFFFFF;
   line-height: 1;
   vertical-align: middle;
-}
-
-
-
-/* 🔥 Ajuste CrypCoin Video FINAL */
-.hb-elem video.hb-responsive-elem {
-  width: 100%;
-  height: 100%;
-  max-width: none;
-  max-height: 660px;
-  object-fit: contain;
-  display: block;
-  transform: translateY(60px);
-}
-
-@media (max-width: 991px) {
-  .hb-elem video.hb-responsive-elem {
-    max-height: 400px;
-    transform: translateY(40px);
-  }
-}
-
-/* ✅ Ajuste CrypCoin Video FINAL FORZADO */
-.hb-elem video.hb-responsive-elem {
-  width: 100%;
-  height: 100%;
-  max-width: none;
-  max-height: 660px;
-  object-fit: contain;
-  display: block;
-  transform: translateY(60px);
-}
-
-@media (max-width: 991px) {
-  .hb-elem video.hb-responsive-elem {
-    max-height: 400px;
-    transform: translateY(40px);
-  }
-}
-
-
-/* === 🔥 AJUSTE FINAL CrypCoin Video Escalado === */
-.hb-elem {
-  min-height: 400px;
-  display: flex;
-  justify-content: flex-end;
-  align-items: flex-end;
-}
-
-.hb-elem video.hb-responsive-elem {
-  width: auto;
-  height: 100%;
-  max-height: 660px;
-  object-fit: contain;
-  display: block;
-  transform: translateY(0);
-}
-
-@media (max-width: 991px) {
-  .hb-elem video.hb-responsive-elem {
-    max-height: 400px;
-  }
 }
