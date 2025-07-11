@@ -2040,3 +2040,45 @@ h5,
 
     /* Altura piso visual */
 }
+
+.jackpot-card-wrapper {
+  width: 600px;  /* ajustá el tamaño según necesites */
+  height: auto;
+  display: flex;
+  align-items: end;
+  justify-content: center;
+  position: relative;
+}
+.jackpot-card-img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.jackpot-character {
+  width: 65%; /* ajusta según tu personaje */
+  height: auto;
+  position: absolute;
+  top: 26%;   /* alineación vertical dentro del marco */
+  left: 0; right: 0;
+  margin: auto;
+  z-index: 2;
+  pointer-events: none;
+}
+@media (max-width: 991px) {
+  .jackpot-card-wrapper { width: 140px; }
+}
+
+/* ✅ Tamaño base para enemigos */
+.enemigo {
+  width: 500px;   /* Ajustá entre 80px y 120px según tu gusto */
+  height: auto;
+  object-fit: contain;
+  display: block;
+}
+
+/* ✅ Breakpoint para móvil/tablet */
+@media (max-width: 991px) {
+  .enemigo {
+    width: 70px;  /* Ajustá para mobile */
+  }
+}
