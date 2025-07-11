@@ -22,7 +22,8 @@
         </div>
         <header>
             <nav class="navbar navbar-expand-xl flex-nowrap">
-                <div class="container"><a class="navbar-brand p-0" href="index.html"> <img alt="logo" src="assets/images/logo.png"/> </a>
+                <div class="container">
+                    <a class="navbar-brand p-0" href="index.html"> <img alt="logo" src="assets/images/logo.png"/> </a>
                     <div class="collapse navbar-collapse" id="navbar-right">
                         <ul class="navbar-nav">
                             <li class="nav-item"><a class="nav-link nav-white" href="stacking.html">
@@ -42,7 +43,8 @@
                             </li>
                         </ul>
                     </div>
-                    <div class="d-flex align-items-center gap-2 gap-sm-3"><a class="primary-btn btn-sm btn-bg" href="#buy" role="button"> <span class="text d-none d-sm-block">
+                    <div class="d-flex align-items-center gap-2 gap-sm-3">
+                        <a class="primary-btn btn-sm btn-bg" href="#buy" role="button"> <span class="text d-none d-sm-block">
         Buy
                             Now </span> <i class="fa-solid fa-wallet d-sm-none"> </i> <span> <span class="d-none d-sm-block">
          Buy Now </span> <i class="fa-solid fa-wallet d-sm-none"> </i> </span> </a>
@@ -56,7 +58,8 @@
           EN <img alt="" src="assets/images/falg.png"/> </a>
                                 </li>
                             </ul>
-                        </div><a aria-controls="navbar-right" aria-expanded="false" aria-label="Toggle navigation" class="navbar-toggler p-0" data-bs-target="#navbar-right" data-bs-toggle="collapse" href="#buy" type="button"> <span class="toggle-menu-icon"> <span> </span> <span> </span> <span> </span> <span> </span> </span> </a>
+                        </div>
+                        <a aria-controls="navbar-right" aria-expanded="false" aria-label="Toggle navigation" class="navbar-toggler p-0" data-bs-target="#navbar-right" data-bs-toggle="collapse" href="#buy" type="button"> <span class="toggle-menu-icon"> <span> </span> <span> </span> <span> </span> <span> </span> </span> </a>
                     </div>
                 </div>
             </nav>
@@ -73,25 +76,25 @@
                     <div class="hb-position">
                         <div class="row align-items-end w-100">
                             <!-- Enemigo izquierda -->
-                            <div class="col-6 col-md-4">
-                                <div class="hb-elem">
-                                    <img alt="" class="w-100" src="assets/images/hb-elem-1.png"/>
-                                </div>
+                            <video class="enemigo" autoplay loop muted playsinline>
+                                <source src="assets/videos/Enemy.webm" type="video/webm">
+                                Tu navegador no soporta video HTML5.
+                            </video>
+                        </div>
+                        <!-- Centro vacío o VS -->
+                        <div class="col-6 col-md-4 d-none d-md-block">
+                            <div class="hb-elem">
+                                <!-- Si quieres el VS aquí -->
                             </div>
-                            <!-- Centro vacío o VS -->
-                            <div class="col-6 col-md-4 d-none d-md-block">
-                                <div class="hb-elem">
-                                    <!-- Si quieres el VS aquí -->
-                                </div>
-                            </div>
-                            <!-- CrypCoin video derecha alineado -->
-                            <div class="col-6 col-md-4 position-relative">
-                                <div class="hb-elem crypcoin-wrapper">
-                                    <video class="crypcoin-video" src="assets/videos/CrypCoin.webm" autoplay loop muted playsinline></video>
-                                </div>
+                        </div>
+                        <!-- CrypCoin video derecha alineado -->
+                        <div class="col-6 col-md-4 position-relative">
+                            <div class="hb-elem crypcoin-wrapper">
+                                <video class="crypcoin-video" src="assets/videos/CrypCoin.webm" autoplay loop muted playsinline></video>
                             </div>
                         </div>
                     </div>
+                </div>
             </section>
             <section class="buy-offer-section">
                 <div class="container">
