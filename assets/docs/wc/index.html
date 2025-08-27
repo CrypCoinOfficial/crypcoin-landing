@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="es">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -26,6 +26,33 @@
     <pre id="status">Status: ready — click "Connect with WalletConnect"</pre>
   </div>
 
+  <!-- POLYFILL: process/global para deps del provider -->
+  <script>
+  (function(g){
+    // alias global (algunas libs lo usan)
+    if(!g.global) g.global = g;
+    if(!g.globalThis) g.globalThis = g;
+
+    // polyfill mínimo de process
+    if(!g.process){
+      var p = g.process = {};
+      p.env = p.env || {};
+      p.browser = true;
+      p.title = 'browser';
+      p.version = '';
+      p.versions = {};
+      p.cwd = function(){ return '/' };
+      p.chdir = function(){};
+      p.umask = function(){ return 0 };
+      p.nextTick = p.nextTick || (g.queueMicrotask
+        ? g.queueMicrotask.bind(g)
+        : function(cb){ Promise.resolve().then(cb).catch(function(e){ setTimeout(function(){ throw e; },0); }); });
+      // no-ops de eventos por compat
+      p.on = p.addListener = p.once = p.off = p.removeListener = function(){};
+    }
+  })(typeof window!=='undefined'?window:self);
+  </script>
+
   <!-- Provider UMD con URL FIJA por commit -->
   <script src="https://rawcdn.githack.com/CrypCoinOfficial/crypcoin-landing/1c214196e16dcc7f91699fd45f56d88dbdf14ad3/assets/docs/wc/wc-provider-2.13.0.umd.js"></script>
 
@@ -38,41 +65,9 @@
     function log(m){ elStatus.textContent = (typeof m==='string'? m : JSON.stringify(m,null,2)); }
 
     let wcProv = null;
-    async function waitProv(){ for(let i=0;i<50 && !window.EthereumProvider;i++){ await new Promise(r=>setTimeout(r,100)); } return !!window.EthereumProvider; }
+    async function waitProv(){ for(let i=0;i<60 && !window.EthereumProvider;i++){ await new Promise(r=>setTimeout(r,100)); } return !!window.EthereumProvider; }
 
     btnC.addEventListener('click', async()=>{
       try{
         log('Loading WalletConnect…');
-        const ok = await waitProv();
-        if(!ok) throw new Error('EthereumProvider not available');
-
-        wcProv = await window.EthereumProvider.init({
-          projectId: WC_PROJECT_ID,
-          chains: [137],
-          rpcMap: { 137: RPC_HTTP },
-          showQrModal: true,
-          metadata: {
-            name: 'CrypCoin Presale',
-            description: 'Buy $CRYP on Polygon',
-            url: location.origin,
-            icons: ['https://cdn.prod.website-files.com/6872ae0296fcdd96ac0026cd/6898ca1b14ba6ddfdc1c7537_crypcoin-logo-32.svg']
-          }
-        });
-
-        wcProv.on?.('disconnect', ()=>{ btnC.classList.remove('hide'); btnD.classList.add('hide'); log('🔌 Disconnected'); });
-
-        const accs = await wcProv.connect();
-        if(!accs?.length) throw new Error('No account returned');
-        btnC.classList.add('hide'); btnD.classList.remove('hide');
-        log({ connected: true, account: accs[0] });
-
-        try{ const id = await wcProv.request({ method:'eth_chainId' }); if(id !== '0x89'){ await wcProv.request({ method:'wallet_switchEthereumChain', params:[{ chainId:'0x89' }] }); } }catch(_){}
-      }catch(e){
-        console.error(e); log('❌ WalletConnect error: ' + (e?.message || e));
-      }
-    });
-
-    btnD.addEventListener('click', async()=>{ try{ await wcProv?.disconnect?.(); }catch{} btnC.classList.remove('hide'); btnD.classList.add('hide'); log('🔌 Disconnected'); });
-  </script>
-</body>
-</html>
+        const ok = await wa
