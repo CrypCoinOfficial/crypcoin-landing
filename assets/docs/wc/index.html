@@ -28,49 +28,50 @@
 
   <!-- POLYFILL: global / process (antes del provider) -->
   <script>
-    // Asegura objetos globales que usan algunas deps
     window.global = window.global || window;
     window.globalThis = window.globalThis || window;
-
-    // process mínimo y variable global 'process'
     window.process = window.process || {
       env: {}, browser: true, version: '', versions: {},
       nextTick: (cb)=>Promise.resolve().then(cb),
       cwd: ()=>"/", chdir: ()=>{}, umask: ()=>0
     };
-    var process = window.process; // crea el identificador global
+    var process = window.process; // identificador global
   </script>
 
-  <!-- CARGADOR ROBUSTO DEL PROVIDER (UMD) -->
+  <!-- CARGADOR DEL PROVIDER (varias URLs) -->
   <script>
     const statusEl = document.getElementById('status');
+    function logStatus(m){ statusEl.textContent = String(m); }
 
+    // Nota: dejamos primero tu archivo en el repo, y de backup los CDNs oficiales.
     const PROVIDER_URLS = [
-      // 1) Tu commit fijo (cambia el SHA cuando actualices archivos)
+      // tu commit (actualizá el SHA si subís uno nuevo)
       'https://rawcdn.githack.com/CrypCoinOfficial/crypcoin-landing/292f1866fee2dfa397496f874420c88db804976e/assets/docs/wc/wc-provider-2.13.0.umd.js',
-      // 2) Rama main (siempre el último)
+      // rama main
       'https://raw.githack.com/CrypCoinOfficial/crypcoin-landing/main/assets/docs/wc/wc-provider-2.13.0.umd.js',
-      // 3) jsDelivr (UMD oficial de npm)
+      // UMD oficial desde CDNs
       'https://cdn.jsdelivr.net/npm/@walletconnect/ethereum-provider@2.13.0/dist/index.umd.js',
-      // 4) unpkg (UMD oficial de npm)
       'https://unpkg.com/@walletconnect/ethereum-provider@2.13.0/dist/index.umd.js'
     ];
 
-    function logStatus(msg){ statusEl.textContent = String(msg); }
+    function getEP(){
+      // Soporta ambas variantes de UMD:
+      //  - window.EthereumProvider
+      //  - window["@walletconnect/ethereum-provider"].default
+      const mod = window['@walletconnect/ethereum-provider'];
+      return window.EthereumProvider || (mod && (mod.default || mod));
+    }
 
     function loadScriptChecked(src){
       return new Promise((resolve, reject)=>{
-        const s = document.createElement('script');
-        s.src = src;
-        s.async = true;
-        s.onload = ()=>{
-          if (window.EthereumProvider) {
-            resolve(src);
-          } else {
-            reject(new Error('loaded but EthereumProvider undefined'));
-          }
+        const s=document.createElement('script');
+        s.src=src; s.async=true;
+        s.onload=()=>{
+          const EP=getEP();
+          if(EP) resolve(src);
+          else reject(new Error('loaded but EP undefined'));
         };
-        s.onerror = ()=> reject(new Error('network error'));
+        s.onerror=()=>reject(new Error('network error'));
         document.head.appendChild(s);
       });
     }
@@ -90,10 +91,9 @@
       return false;
     }
 
-    // Arranque
     (async ()=>{
       const ok = await ensureProvider();
-      if (!ok) return;
+      if(!ok) return;
       logStatus('Status: ready — click "Connect with WalletConnect"');
     })();
   </script>
@@ -105,25 +105,23 @@
 
     const btnC = document.getElementById('btnConnect');
     const btnD = document.getElementById('btnDisconnect');
-
-    let wcProv = null;
-
+    const statusEl = document.getElementById('status');
     function log(m){ statusEl.textContent = (typeof m==='string'? m : JSON.stringify(m,null,2)); }
 
-    async function waitProviderReady(){
-      for(let i=0;i<80 && !window.EthereumProvider;i++){
-        await new Promise(r=>setTimeout(r,100));
-      }
-      return !!window.EthereumProvider;
+    async function waitEP(){
+      for(let i=0;i<100 && !getEP();i++){ await new Promise(r=>setTimeout(r,100)); }
+      return getEP();
     }
+
+    let wcProv=null;
 
     btnC.addEventListener('click', async()=>{
       try{
         log('Loading WalletConnect…');
-        const ready = await waitProviderReady();
-        if(!ready) throw new Error('EthereumProvider not available');
+        const EP = await waitEP();
+        if(!EP) throw new Error('EthereumProvider not available');
 
-        wcProv = await window.EthereumProvider.init({
+        wcProv = await EP.init({
           projectId: WC_PROJECT_ID,
           chains: [137],
           rpcMap: { 137: RPC_HTTP },
@@ -142,7 +140,7 @@
           log('🔌 Disconnected');
         });
 
-        const accs = await wcProv.connect(); // abre QR / lista wallets
+        const accs = await wcProv.connect(); // abre QR / lista
         if(!accs?.length) throw new Error('No account returned');
 
         btnC.classList.add('hide');
@@ -167,6 +165,12 @@
       btnC.classList.remove('hide'); btnD.classList.add('hide');
       log('🔌 Disconnected');
     });
+
+    // misma función que arriba, accesible aquí también
+    function getEP(){
+      const mod = window['@walletconnect/ethereum-provider'];
+      return window.EthereumProvider || (mod && (mod.default || mod));
+    }
   </script>
 </body>
 </html>
