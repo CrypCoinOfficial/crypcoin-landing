@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>CrypCoin — WalletConnect Standalone</title>
+  <title>CrypCoin — WalletConnect Standalone (UniversalProvider)</title>
   <style>
     body{font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;background:#0b0e14;color:#e5e7eb;margin:0;padding:24px;display:flex;justify-content:center}
     .card{width:min(100%,680px);border:1px solid #1f2937;border-radius:12px;padding:16px;background:#0b0e14;box-shadow:0 10px 30px rgba(0,0,0,.25)}
@@ -26,7 +26,7 @@
     <pre id="status">Status: preparando…</pre>
   </div>
 
-  <!-- Polyfills mínimos antes de cargar el provider -->
+  <!-- Polyfills mínimos antes de cargar librerías -->
   <script>
     window.global = window.global || window;
     window.globalThis = window.globalThis || window;
@@ -38,127 +38,136 @@
     var process = window.process; // identificador global
   </script>
 
-  <!-- Loader robusto del provider (4 URLs) + detección múltiple -->
+  <!-- Loader robusto: UniversalProvider + Modal + (Buffer opcional) -->
   <script>
-    const S = document.getElementById('status');
-    const log = (m)=>{ S.textContent = (typeof m==='string'? m : JSON.stringify(m,null,2)); };
-    const note = (m)=>{ S.textContent += "\n" + m; };
+    const STATUS = document.getElementById('status');
+    const log = (m)=>{ STATUS.textContent = (typeof m==='string'? m : JSON.stringify(m,null,2)); };
+    const note = (m)=>{ STATUS.textContent += "\n" + m; };
 
-    const PROVIDER_URLS = [
-      // tu repo: commit fijo y rama main
-      'https://rawcdn.githack.com/CrypCoinOfficial/crypcoin-landing/292f1866fee2dfa397496f874420c88db804976e/assets/docs/wc/wc-provider-2.13.0.umd.js',
-      'https://raw.githack.com/CrypCoinOfficial/crypcoin-landing/main/assets/docs/wc/wc-provider-2.13.0.umd.js',
-      // UMD oficial desde CDNs
-      'https://cdn.jsdelivr.net/npm/@walletconnect/ethereum-provider@2.13.0/dist/index.umd.js',
-      'https://unpkg.com/@walletconnect/ethereum-provider@2.13.0/dist/index.umd.js'
-    ];
+    // Cambiá el SHA cuando hagas un nuevo commit de estos archivos locales
+    const COMMIT_SHA = "292f1866fee2dfa397496f874420c88db804976e";
 
-    function detectEP(){
-      // Variantes posibles
-      const c1 = window.EthereumProvider;
-      const c2 = window['@walletconnect/ethereum-provider'];
-      const c3 = c2 && (c2.default || c2.EthereumProvider || c2.UniversalProvider);
-      const c4 = window.WalletConnectEthereumProvider; // seen in algunos builds
-      return c1 || c3 || c2 || c4 || null;
-    }
+    const URLS = {
+      universal: [
+        // LOCAL (subilo a tu repo para evitar CDNs)
+        `https://rawcdn.githack.com/CrypCoinOfficial/crypcoin-landing/${COMMIT_SHA}/assets/docs/wc/wc-universal-2.13.0.umd.js`,
+        // CDNs oficiales (fallback)
+        "https://cdn.jsdelivr.net/npm/@walletconnect/universal-provider@2.13.0/dist/index.umd.js",
+        "https://unpkg.com/@walletconnect/universal-provider@2.13.0/dist/index.umd.js"
+      ],
+      modal: [
+        // LOCAL (subilo a tu repo para evitar CDNs)
+        `https://rawcdn.githack.com/CrypCoinOfficial/crypcoin-landing/${COMMIT_SHA}/assets/docs/wc/wc-modal-2.6.2.umd.js`,
+        // CDNs oficiales (fallback)
+        "https://cdn.jsdelivr.net/npm/@walletconnect/modal@2.6.2/dist/index.umd.js",
+        "https://unpkg.com/@walletconnect/modal@2.6.2/dist/index.umd.js"
+      ],
+      buffer: [
+        "https://cdn.jsdelivr.net/npm/buffer@6.0.3/index.min.js",
+        "https://unpkg.com/buffer@6.0.3/index.min.js"
+      ]
+    };
 
-    function loadScriptChecked(src){
-      return new Promise((resolve, reject)=>{
-        const s = document.createElement('script');
-        s.src = src; s.async = true;
-        s.onload = ()=>{
-          const found = detectEP();
-          if(found){
-            window.__EP__ = found; // alias único global
-            resolve(src);
-          }else{
-            reject(new Error('loaded but no global found'));
-          }
-        };
-        s.onerror = ()=>reject(new Error('network error'));
+    function loadScript(src){
+      return new Promise((res, rej)=>{
+        const s=document.createElement('script');
+        s.src=src; s.async=true;
+        s.onload=()=>res(src);
+        s.onerror=()=>rej(new Error('network error'));
         document.head.appendChild(s);
       });
     }
-
-    async function ensureProvider(){
-      for(const url of PROVIDER_URLS){
+    async function loadAny(list, test){
+      for(const u of list){
         try{
-          log('Cargando provider: ' + url);
-          await loadScriptChecked(url);
-          log('Provider listo ✓ (' + url + ')');
-          return true;
+          log('Cargando: ' + u);
+          await loadScript(u);
+          if(await test()) { log('OK: '+u); return u; }
+          note('↳ loaded pero no expuso el global esperado');
         }catch(e){
-          note('↳ fallo: ' + e.message);
+          note('↳ fallo: '+e.message);
         }
       }
-      log('❌ No se pudo cargar el provider desde ninguna URL.');
-      return false;
+      throw new Error('all sources failed');
     }
 
+    function getUniversal(){
+      const g = window['@walletconnect/universal-provider'];
+      return window.UniversalProvider || (g && (g.default || g)) || null;
+    }
+    function getModalCtor(){
+      const g = window['@walletconnect/modal'];
+      // algunos builds ponen WalletConnectModal global directo
+      return (window.WalletConnectModal && (window.WalletConnectModal.default || window.WalletConnectModal))
+           || (g && (g.default || g))
+           || null;
+    }
+
+    async function ensureBuffer(){
+      if (window.Buffer) return;
+      await loadAny(URLS.buffer, ()=> !!window.Buffer);
+    }
+
+    // Boot: carga UniversalProvider y luego Modal
     (async ()=>{
-      const ok = await ensureProvider();
-      if(!ok) return;
-      log('Status: ready — click "Connect with WalletConnect"');
+      try{
+        await ensureBuffer(); // por si alguna dep lo pide
+        await loadAny(URLS.universal, ()=> !!getUniversal());
+        await loadAny(URLS.modal, ()=> !!getModalCtor());
+        log('Status: ready — click "Connect with WalletConnect"');
+      }catch(e){
+        log('❌ No se pudieron cargar las libs: ' + e.message);
+      }
     })();
   </script>
 
-  <!-- App -->
+  <!-- App (UniversalProvider + Modal) -->
   <script>
     const RPC_HTTP = 'https://polygon-mainnet.g.alchemy.com/v2/It7ghpJe2o8trpFhbDgGzIucMbX-Erzb';
     const WC_PROJECT_ID = 'c264c3eb3939f207e269689e94b7faf5';
-
     const btnC = document.getElementById('btnConnect');
     const btnD = document.getElementById('btnDisconnect');
-    const S = document.getElementById('status');
 
-    function log(m){ S.textContent = (typeof m==='string'? m : JSON.stringify(m,null,2)); }
-
-    async function waitEP(max=120){
-      for(let i=0;i<max && !window.__EP__;i++){ await new Promise(r=>setTimeout(r,100)); }
-      return window.__EP__ || null;
-    }
-
-    let wcProv = null;
+    function addr(a){ return a?.slice(0,6)+'…'+a?.slice(-4); }
 
     btnC.addEventListener('click', async()=>{
       try{
-        log('Loading WalletConnect…');
-        const EP = await waitEP();
-        if(!EP) throw new Error('EthereumProvider not available');
+        log('Inicializando WalletConnect…');
+        const Universal = getUniversal();
+        const ModalCtor = getModalCtor();
+        if(!Universal || !ModalCtor) throw new Error('SDKs no disponibles');
 
-        wcProv = await EP.init({
+        // 1) UniversalProvider (cliente WalletConnect)
+        const up = await Universal.init({ projectId: WC_PROJECT_ID });
+
+        // 2) Modal standalone
+        const modal = new ModalCtor({
           projectId: WC_PROJECT_ID,
-          chains: [137],
-          rpcMap: { 137: RPC_HTTP },
-          showQrModal: true,
-          metadata: {
-            name: 'CrypCoin Presale',
-            description: 'Buy $CRYP on Polygon',
-            url: location.origin,
-            icons: ['https://cdn.prod.website-files.com/6872ae0296fcdd96ac0026cd/6898ca1b14ba6ddfdc1c7537_crypcoin-logo-32.svg']
-          }
+          themeMode: 'dark',
+          standaloneChains: ['eip155:137'], // mostramos Polygon
         });
 
-        wcProv.on?.('disconnect', ()=>{
-          btnC.classList.remove('hide');
-          btnD.classList.add('hide');
-          log('🔌 Disconnected');
-        });
-
-        const accs = await wcProv.connect(); // abre QR / lista
-        if(!accs?.length) throw new Error('No account returned');
-
-        btnC.classList.add('hide');
-        btnD.classList.remove('hide');
-        log({ connected:true, account: accs[0] });
-
-        // (opcional) forzar Polygon
-        try{
-          const id = await wcProv.request({ method:'eth_chainId' });
-          if(id !== '0x89'){
-            await wcProv.request({ method:'wallet_switchEthereumChain', params:[{ chainId:'0x89' }] });
+        // 3) Iniciar handshake
+        const requiredNamespaces = {
+          eip155: {
+            chains: ['eip155:137'],
+            methods: ['eth_sendTransaction','eth_signTransaction','eth_sign','personal_sign','eth_signTypedData'],
+            events: ['chainChanged','accountsChanged'],
           }
-        }catch(_){}
+        };
+
+        const { uri, approval } = await up.client.connect({ requiredNamespaces });
+        if (uri) modal.openModal({ uri });
+        const session = await approval();   // usuario acepta en el wallet
+        modal.closeModal();
+
+        // 4) Obtener cuentas
+        const accounts = session.namespaces.eip155.accounts
+          .filter(a=>a.startsWith('eip155:137:'))
+          .map(a=>a.split(':')[2]);
+
+        log({ connected:true, chain:'137', accounts });
+        btnC.classList.add('hide'); btnD.classList.remove('hide');
       }catch(e){
         console.error(e);
         log('❌ WalletConnect error: ' + (e?.message || e));
@@ -166,10 +175,9 @@
     });
 
     btnD.addEventListener('click', async()=>{
-      try{ await wcProv?.disconnect?.(); }catch{}
-      btnC.classList.remove('hide');
-      btnD.classList.add('hide');
-      log('🔌 Disconnected');
+      // UniversalProvider mantiene el client en up.client; para simplicidad,
+      // refrescar la página limpia el estado. Si quisieras, podemos añadir up.client.disconnect().
+      location.reload();
     });
   </script>
 </body>
