@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CrypCoin — WalletConnect Standalone</title>
+  <style>
+    body{font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;background:#0b0e14;color:#e5e7eb;margin:0;padding:24px;display:flex;justify-content:center}
+    .card{width:min(100%,660px);border:1px solid #1f2937;border-radius:12px;padding:16px;background:#0b0e14;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+    h2{margin:0 0 8px;font-weight:800}
+    .row{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}
+    button{padding:10px 14px;border-radius:10px;border:1px solid #111;background:#00a3ff;color:#fff;font-weight:800;cursor:pointer}
+    button.secondary{background:#fff;color:#111}
+    pre{background:#0f172a;border:1px solid #1f2937;border-radius:10px;padding:10px;white-space:pre-wrap;min-height:120px}
+    .muted{opacity:.85}
+    .ok{color:#86efac}
+    .err{color:#fca5a5}
+    .hide{display:none}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>WalletConnect — Standalone</h2>
+    <p class="muted">Conecta por QR / lista de wallets y muestra la cuenta conectada (Polygon 137).</p>
+    <div class="row">
+      <button id="btnConnect">Connect with WalletConnect</button>
+      <button id="btnDisconnect" class="secondary hide">Disconnect</button>
+    </div>
+    <pre id="status">Status: ready — click "Connect with WalletConnect"</pre>
+  </div>
+
+  <script src="wc-provider-2.13.0.umd.js"></script>
+
+  <script>
+    const RPC_HTTP = 'https://polygon-mainnet.g.alchemy.com/v2/It7ghpJe2o8trpFhbDgGzIucMbX-Erzb';
+    const WC_PROJECT_ID = 'c264c3eb3939f207e269689e94b7faf5';
+    const elStatus = document.getElementById('status');
+    const btnC = document.getElementById('btnConnect');
+    const btnD = document.getElementById('btnDisconnect');
+    function log(m){ elStatus.textContent = (typeof m==='string'? m : JSON.stringify(m,null,2)); }
+
+    let wcProv = null;
+
+    async function ensure(){
+      for(let i=0;i<50 && !window.EthereumProvider;i++){ await new Promise(r=>setTimeout(r,100)); }
+      return !!window.EthereumProvider;
+    }
+
+    btnC.addEventListener('click', async()=>{
+      try{
+        log('Loading WalletConnect…');
+        const ok = await ensure();
+        if(!ok){ throw new Error('EthereumProvider not available'); }
+
+        wcProv = await window.EthereumProvider.init({
+          projectId: WC_PROJECT_ID,
+          chains: [137],
+          rpcMap: { 137: RPC_HTTP },
+          showQrModal: true,
+          metadata: {
+            name: 'CrypCoin Presale',
+            description: 'Buy $CRYP on Polygon',
+            url: location.origin,
+            icons: ['https://cdn.prod.website-files.com/6872ae0296fcdd96ac0026cd/6898ca1b14ba6ddfdc1c7537_crypcoin-logo-32.svg']
+          }
+        });
+
+        wcProv.on?.('disconnect', ()=>{
+          btnC.classList.remove('hide');
+          btnD.classList.add('hide');
+          log('🔌 Disconnected');
+        });
+
+        const accs = await wcProv.connect();
+        if(!accs?.length) throw new Error('No account returned');
+        btnC.classList.add('hide');
+        btnD.classList.remove('hide');
+        log({ connected: true, account: accs[0] });
+
+        try{
+          const id = await wcProv.request({ method:'eth_chainId' });
+          if(id !== '0x89'){
+            await wcProv.request({ method:'wallet_switchEthereumChain', params:[{ chainId:'0x89' }] });
+          }
+        }catch(e){ /* ignore */ }
+
+      }catch(e){
+        console.error(e);
+        log('❌ WalletConnect error: ' + (e?.message || e));
+      }
+    });
+
+    btnD.addEventListener('click', async()=>{
+      try{ await wcProv?.disconnect?.(); }catch(e){}
+      btnC.classList.remove('hide');
+      btnD.classList.add('hide');
+      log('🔌 Disconnected');
+    });
+  </script>
+</body>
+</html>
